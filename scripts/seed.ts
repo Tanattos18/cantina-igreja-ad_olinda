@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import bcrypt from "bcryptjs";
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import { fecharDb, getDb, schema, type DB } from "../src/db";
 
 const COMBO = /\+\s*(bebida|refri|refrigerante|suco)/i;
@@ -14,6 +14,50 @@ const FOTOS: [RegExp, string][] = [
   [/^disco/i, "disco"],
   [/^bolinho/i, "bolinho"],
 ];
+
+const SABORES_PAMONHA = [
+  { nome: "Pamonha doce", descricao: "Pamonha doce" },
+  { nome: "Pamonha à moda", descricao: "Pamonha à moda" },
+];
+
+/**
+ * Uma vez só, para quem já tinha a "Pamonha" única: vira "Pamonha de sal" e nascem a doce e a
+ * à moda (mesma foto, preço e categoria), que entram também nas vendas abertas ou em rascunho.
+ */
+async function separarPamonhas(db: DB) {
+  const A = schema.auditoria;
+  const P = schema.produtos;
+  const [feito] = await db.select({ id: A.id }).from(A).where(eq(A.acao, "pamonhas_3_sabores")).limit(1);
+  if (feito) return;
+  await db.transaction(async (tx) => {
+    let [sal] = await tx.select().from(P).where(eq(P.nome, "Pamonha de sal")).limit(1);
+    if (!sal) {
+      const [antiga] = await tx.select().from(P).where(eq(P.nome, "Pamonha")).limit(1);
+      if (antiga) {
+        await tx.update(P).set({ nome: "Pamonha de sal", descricao: "Pamonha salgada" }).where(eq(P.id, antiga.id));
+        sal = { ...antiga, nome: "Pamonha de sal" };
+      }
+    }
+    if (sal) {
+      const itens = await tx
+        .select({ vendaId: schema.vendaItens.vendaId, preco: schema.vendaItens.preco, limite: schema.vendaItens.limite, ativo: schema.vendaItens.ativo })
+        .from(schema.vendaItens)
+        .innerJoin(schema.vendas, eq(schema.vendas.id, schema.vendaItens.vendaId))
+        .where(and(eq(schema.vendaItens.produtoId, sal.id), inArray(schema.vendas.situacao, ["aberta", "rascunho"])));
+      for (const s of SABORES_PAMONHA) {
+        const [ja] = await tx.select({ id: P.id }).from(P).where(eq(P.nome, s.nome)).limit(1);
+        if (ja) continue;
+        const [novo] = await tx
+          .insert(P)
+          .values({ ...s, categoria: sal.categoria, emoji: sal.emoji, imagemId: sal.imagemId, preco: sal.preco, ativo: sal.ativo })
+          .returning({ id: P.id });
+        if (itens.length) await tx.insert(schema.vendaItens).values(itens.map((i) => ({ ...i, produtoId: novo.id })));
+        console.log(`${s.nome} criada (${itens.length} venda(s) atualizada(s)).`);
+      }
+    }
+    await tx.insert(A).values({ acao: "pamonhas_3_sabores", entidade: "produto" });
+  });
+}
 
 /**
  * Uma vez só: coloca as fotos nos produtos que ainda não têm. Depois disso não mexe mais,
@@ -77,7 +121,9 @@ export async function cargaInicial(db: DB) {
   if (n === 0) {
     // Preços dos cartazes da cantina.
     await db.insert(schema.produtos).values([
-      { emoji: "🌽", categoria: "Pamonhas", nome: "Pamonha", descricao: "Sal, doce ou à moda (diga o sabor na observação)", preco: 12 },
+      { emoji: "🌽", categoria: "Pamonhas", nome: "Pamonha de sal", descricao: "Pamonha salgada", preco: 12 },
+      { emoji: "🌽", categoria: "Pamonhas", nome: "Pamonha doce", descricao: "Pamonha doce", preco: 12 },
+      { emoji: "🌽", categoria: "Pamonhas", nome: "Pamonha à moda", descricao: "Pamonha à moda", preco: 12 },
       { emoji: "🌽", categoria: "Combos", nome: "Pamonha + bebida", descricao: "Pamonha de qualquer sabor com bebida", preco: 16 },
       { emoji: "🥟", categoria: "Salgados", nome: "Esfirra", descricao: "Carne ou queijo", preco: 8 },
       { emoji: "🥟", categoria: "Combos", nome: "Esfirra + bebida", descricao: "Esfirra de carne ou queijo com bebida", preco: 12 },
@@ -91,6 +137,7 @@ export async function cargaInicial(db: DB) {
   }
 
   await fotosIniciais(db);
+  await separarPamonhas(db);
 
   const [{ u }] = await db.select({ u: count() }).from(schema.usuarios);
   if (u === 0 && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
