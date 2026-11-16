@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Resultado de uma Server Action. `confirmar` pede uma confirmação extra no formulário; `link` aponta para onde resolver. */
-export type EstadoAcao = { erro?: string; ok?: string; confirmar?: string; link?: string };
+export type EstadoAcao = { erro?: string; ok?: string; confirmar?: string; link?: string; mensagem?: string };
 
 /** Converte o FormData (campos vazios viram undefined) e valida com o schema. */
 export function lerForm<T extends z.ZodType>(

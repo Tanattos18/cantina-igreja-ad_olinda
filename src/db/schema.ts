@@ -70,6 +70,9 @@ export const usuarios = pgTable("usuarios", {
   ativo: boolean("ativo").notNull().default(true),
   // Senha provisória (criada por outra pessoa): obriga a troca no próximo acesso.
   trocarSenha: boolean("trocar_senha").notNull().default(false),
+  // Convite para a pessoa criar a própria senha: guarda só o hash do link (o link aparece uma vez no painel).
+  conviteHash: text("convite_hash").unique(),
+  conviteExpiraEm: timestamp("convite_expira_em", { withTimezone: true }),
   criadoEm: criadoEm(),
 });
 

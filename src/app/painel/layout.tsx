@@ -46,7 +46,7 @@ export default async function PainelLayout({ children }: LayoutProps<"/painel">)
           ))}
           <div className="flex shrink-0 gap-1 md:mt-4 md:block md:space-y-0.5 md:border-t md:border-white/10 md:pt-4">
             <a href="/" target="_blank" rel="noopener" className="block rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap text-amarelo hover:bg-white/10">Ver a loja ↗</a>
-            <Link href="/painel/conta" className="block rounded-lg px-3 py-2 text-sm whitespace-nowrap hover:bg-white/10">Minha senha</Link>
+            <Link href="/painel/conta" className="block rounded-lg px-3 py-2 text-sm whitespace-nowrap hover:bg-white/10">Minha conta</Link>
             <form action={sair}>
               <button className="w-full rounded-lg px-3 py-2 text-left text-sm whitespace-nowrap text-blue-200 hover:bg-white/10 hover:text-red-200">Sair</button>
             </form>
