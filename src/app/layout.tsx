@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Nunito_Sans } from "next/font/google";
+import { urlDoSite } from "@/lib/config";
 import "./globals.css";
 
 // Fraunces: títulos com serifa, elegantes. Nunito Sans: leitura fácil no celular.
@@ -7,6 +8,8 @@ const titulos = Fraunces({ variable: "--font-titulos", subsets: ["latin"], weigh
 const texto = Nunito_Sans({ variable: "--font-texto", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // Endereço completo nas prévias de link (WhatsApp precisa da URL absoluta da imagem).
+  metadataBase: new URL(urlDoSite()),
   title: "Cantina",
   description: "Faça seu pedido na cantina da igreja",
   icons: { icon: "/logo", apple: "/logo" },

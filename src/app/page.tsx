@@ -10,7 +10,13 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const c = await lerConfiguracao(await getDb());
-  return { title: `${c.nome} — Faça seu pedido`, description: c.mensagem ?? "Faça seu pedido na cantina" };
+  const titulo = `${c.nome} — Faça seu pedido`;
+  const descricao = `${c.mensagem ? `${c.mensagem}. ` : ""}Peça pelo celular, pague no Pix ou na retirada e pegue sem fila.`;
+  return {
+    title: titulo,
+    description: descricao,
+    openGraph: { title: titulo, description: descricao, siteName: c.nome, locale: "pt_BR", type: "website", url: "/" },
+  };
 }
 
 export default async function Inicio() {
