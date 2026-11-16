@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, eq, ne } from "drizzle-orm";
+import { and, count, desc, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -8,7 +8,7 @@ import { getDb, schema } from "@/db";
 import { auditar } from "@/lib/auditoria";
 import { exigirUsuario } from "@/lib/auth";
 import { lerForm, zData, zId, zValor, type EstadoAcao } from "@/lib/form";
-import { deDataHoraLocal } from "@/lib/formato";
+import { deDataHoraLocal, proximoDomingo } from "@/lib/formato";
 
 const DadosVenda = z.object({
   titulo: z.string().min(3, "informe um título").max(80),
@@ -43,6 +43,41 @@ export async function criarVenda(_: EstadoAcao, formData: FormData): Promise<Est
   redirect(`/painel/vendas/${id}/editar`);
 }
 
+/**
+ * Um clique: deixa a loja recebendo pedidos. Abre a venda em rascunho mais recente; se não houver,
+ * cria a venda do próximo domingo com todo o cardápio (preço padrão, sem limite) e já abre.
+ * Preços, quantidades e horário ficam para ajustar depois em "Editar venda".
+ */
+export async function abrirCantina() {
+  const usuario = await exigirUsuario();
+  const db = await getDb();
+  const id = await db.transaction(async (tx) => {
+    const [aberta] = await tx.select({ id: schema.vendas.id }).from(schema.vendas).where(eq(schema.vendas.situacao, "aberta")).limit(1);
+    if (aberta) return aberta.id;
+    let [venda] = await tx
+      .select({ id: schema.vendas.id })
+      .from(schema.vendas)
+      .where(eq(schema.vendas.situacao, "rascunho"))
+      .orderBy(desc(schema.vendas.id))
+      .limit(1);
+    if (!venda) {
+      [venda] = await tx
+        .insert(schema.vendas)
+        .values({ titulo: "Domingo é dia de cantina!", dataRetirada: proximoDomingo(), retirada: "na cantina, após o culto" })
+        .returning({ id: schema.vendas.id });
+      const produtos = await tx.select().from(schema.produtos).where(eq(schema.produtos.ativo, true));
+      if (produtos.length) {
+        await tx.insert(schema.vendaItens).values(produtos.map((p) => ({ vendaId: venda.id, produtoId: p.id, preco: p.preco })));
+      }
+    }
+    await tx.update(schema.vendas).set({ situacao: "aberta" }).where(eq(schema.vendas.id, venda.id));
+    await auditar(tx, usuario.uid, "abrir_cantina", "venda", venda.id);
+    return venda.id;
+  });
+  revalidatePath("/", "layout");
+  redirect(`/painel/vendas/${id}`);
+}
+
 export async function salvarVenda(_: EstadoAcao, formData: FormData): Promise<EstadoAcao> {
   const usuario = await exigirUsuario();
   const id = Number(formData.get("id"));
@@ -71,7 +106,7 @@ export async function mudarSituacao(formData: FormData) {
     await tx.update(schema.vendas).set({ situacao: para }).where(eq(schema.vendas.id, id));
     await auditar(tx, usuario.uid, "situacao", "venda", id, { para });
   });
-  revalidatePath("/painel", "layout");
+  revalidatePath("/", "layout");
 }
 
 const NovoItem = z.object({ vendaId: zId, produtoId: zId });

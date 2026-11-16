@@ -2,7 +2,7 @@ import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { exigirUsuario } from "@/lib/auth";
-import { dataExtenso, hojeISO, moeda } from "@/lib/formato";
+import { dataExtenso, moeda, proximoDomingo } from "@/lib/formato";
 import { resumir } from "@/lib/vendas";
 import { ActionForm } from "@/components/action-form";
 import { Cabecalho, Campo } from "@/components/ui";
@@ -10,13 +10,6 @@ import { criarVenda } from "./actions";
 import { BotaoSituacao } from "./botao-situacao";
 
 export const metadata = { title: "Vendas — Painel" };
-
-/** Próximo domingo (ou hoje, se for domingo): o dia mais comum de venda da cantina. */
-function proximoDomingo(): string {
-  const hoje = new Date(`${hojeISO()}T12:00:00Z`);
-  hoje.setUTCDate(hoje.getUTCDate() + ((7 - hoje.getUTCDay()) % 7));
-  return hoje.toISOString().slice(0, 10);
-}
 
 export default async function VendasPage() {
   await exigirUsuario();
@@ -31,10 +24,10 @@ export default async function VendasPage() {
 
   return (
     <div className="max-w-4xl">
-      <Cabecalho titulo="Vendas" descricao="Cada venda é um dia de cantina. Crie a venda, confira os itens e clique em Abrir a cantina para o link começar a receber pedidos." />
+      <Cabecalho titulo="Vendas" descricao="Cada venda é um dia de cantina. O jeito mais rápido é o botão Abrir a cantina agora; aqui ficam o histórico e o planejamento de vendas futuras." />
 
-      <details className="cartao mb-6" open={vendas.length === 0}>
-        <summary className="cursor-pointer font-titulos text-lg font-bold text-marinho">+ Nova venda (um dia de cantina)</summary>
+      <details className="cartao mb-6">
+        <summary className="cursor-pointer font-titulos text-lg font-bold text-marinho">+ Planejar uma venda com antecedência</summary>
         <ActionForm action={criarVenda} botao="Criar venda" className="mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo rotulo="Título" className="sm:col-span-2">
@@ -50,7 +43,7 @@ export default async function VendasPage() {
               <input name="retirada" className="campo" maxLength={150} defaultValue="na cantina, após o culto" />
             </Campo>
           </div>
-          <p className="mt-3 text-sm text-stone-500">A venda começa com todos os itens do cardápio. Na próxima tela você ajusta preços e quantidades e clica em <strong>🟢 Abrir a cantina</strong>.</p>
+          <p className="mt-3 text-sm text-stone-500">A venda começa com todos os itens do cardápio e fica fechada até você clicar em <strong>🟢 Abrir a cantina</strong>.</p>
         </ActionForm>
       </details>
 

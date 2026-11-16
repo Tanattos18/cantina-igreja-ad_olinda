@@ -5,6 +5,7 @@ import { lerConfiguracao } from "@/lib/config";
 import { vendaAberta } from "@/lib/vendas";
 import { Logo } from "@/components/marca";
 import { sair } from "../login/actions";
+import { abrirCantina } from "./vendas/actions";
 
 export default async function PainelLayout({ children }: LayoutProps<"/painel">) {
   const usuario = await exigirUsuario();
@@ -55,8 +56,10 @@ export default async function PainelLayout({ children }: LayoutProps<"/painel">)
       <main className="min-w-0 flex-1 p-4 md:p-8 print:p-0">
         {!aberta && (
           <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-amarelo px-5 py-3 text-marinho print:hidden">
-            <p className="min-w-0 flex-1 font-bold">🔴 A cantina está fechada: o link mostra “Nenhuma venda aberta”.</p>
-            <Link href="/painel/vendas" className="botao">Abrir a cantina →</Link>
+            <p className="min-w-0 flex-1 font-bold">🔴 A cantina está fechada: quem abre o link ainda não vê o cardápio.</p>
+            <form action={abrirCantina}>
+              <button className="botao bg-green-700 px-5 py-3 text-base hover:bg-green-800">🟢 Abrir a cantina agora</button>
+            </form>
           </div>
         )}
         {children}

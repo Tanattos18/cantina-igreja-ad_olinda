@@ -89,3 +89,10 @@ export function paraDataHoraLocal(d: Date | null): string {
   const local = new Date(d.getTime() - 3 * 3600_000);
   return local.toISOString().slice(0, 16);
 }
+
+/** Próximo domingo (ou hoje, se for domingo), no formato AAAA-MM-DD: o dia de cantina. */
+export function proximoDomingo(agora = new Date()): string {
+  const d = new Date(`${hojeISO(agora)}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + ((7 - d.getUTCDay()) % 7));
+  return d.toISOString().slice(0, 10);
+}
