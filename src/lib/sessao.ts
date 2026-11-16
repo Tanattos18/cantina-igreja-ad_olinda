@@ -11,13 +11,24 @@ export type Sessao = {
   perfil: Perfil;
 };
 
-function chave(): Uint8Array {
-  const segredo = process.env.SESSION_SECRET;
-  if (!segredo) {
-    if (process.env.NODE_ENV === "production") throw new Error("SESSION_SECRET não configurado.");
-    return new TextEncoder().encode("dev-somente-local-troque-em-producao-0000");
+let chaveDerivada: Promise<Uint8Array> | undefined;
+
+/**
+ * Chave que assina o login. Usa SESSION_SECRET quando configurado; senão deriva uma do endereço
+ * do banco (também secreto e só do servidor), para a publicação precisar de uma variável só.
+ */
+async function chave(): Promise<Uint8Array> {
+  const segredo = process.env.SESSION_SECRET?.trim();
+  if (segredo) return new TextEncoder().encode(segredo);
+  const banco = process.env.DATABASE_URL?.trim();
+  if (banco) {
+    chaveDerivada ??= crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode(`cantina-sessao:${banco}`))
+      .then((h) => new Uint8Array(h));
+    return chaveDerivada;
   }
-  return new TextEncoder().encode(segredo);
+  if (process.env.NODE_ENV === "production") throw new Error("Configure DATABASE_URL (e, se quiser, SESSION_SECRET).");
+  return new TextEncoder().encode("dev-somente-local-troque-em-producao-0000");
 }
 
 export async function assinarSessao(s: Sessao): Promise<string> {
@@ -26,13 +37,13 @@ export async function assinarSessao(s: Sessao): Promise<string> {
     .setSubject(String(s.uid))
     .setIssuedAt()
     .setExpirationTime(`${DURACAO_SESSAO_HORAS}h`)
-    .sign(chave());
+    .sign(await chave());
 }
 
 export async function lerSessao(token: string | undefined): Promise<Sessao | null> {
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, chave(), { algorithms: ["HS256"] });
+    const { payload } = await jwtVerify(token, await chave(), { algorithms: ["HS256"] });
     return {
       uid: Number(payload.sub),
       nome: String(payload.nome),

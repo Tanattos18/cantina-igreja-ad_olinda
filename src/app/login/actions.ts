@@ -1,14 +1,14 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { auditar } from "@/lib/auditoria";
 import { encerrarSessao, iniciarSessao } from "@/lib/auth";
-import { lerForm, type EstadoAcao } from "@/lib/form";
+import { lerForm, zSenha, type EstadoAcao } from "@/lib/form";
 import { JANELA_MINUTOS, loginBloqueado, registrarTentativa } from "@/lib/login";
 
 const Login = z.object({ email: z.email("e-mail inválido"), senha: z.string().min(1) });
@@ -48,4 +48,35 @@ export async function entrar(_: EstadoAcao, formData: FormData): Promise<EstadoA
 export async function sair() {
   await encerrarSessao();
   redirect("/login");
+}
+
+const PrimeiroAdmin = z.object({
+  nome: z.string().min(2, "informe seu nome").max(80),
+  email: z.email("e-mail inválido"),
+  senha: zSenha,
+});
+
+/**
+ * Primeiro acesso de um sistema recém-publicado: sem nenhum usuário cadastrado, quem abre o painel
+ * cria o administrador. Depois disso esta ação não faz mais nada.
+ */
+export async function criarPrimeiroAdmin(_: EstadoAcao, formData: FormData): Promise<EstadoAcao> {
+  const { dados, erro } = lerForm(formData, PrimeiroAdmin);
+  if (!dados) return { erro };
+  const db = await getDb();
+  const criado = await db.transaction(async (tx) => {
+    // Trava a tabela: dois cadastros ao mesmo tempo não criam dois administradores.
+    await tx.execute(sql`lock table usuarios in exclusive mode`);
+    const [{ n }] = await tx.select({ n: count() }).from(schema.usuarios);
+    if (n > 0) return null;
+    const [u] = await tx
+      .insert(schema.usuarios)
+      .values({ nome: dados.nome, email: dados.email.toLowerCase(), senhaHash: await bcrypt.hash(dados.senha, 10), perfil: "admin" })
+      .returning();
+    await auditar(tx, u.id, "primeiro_admin", "usuario", u.id);
+    return u;
+  });
+  if (!criado) return { erro: "O administrador já foi criado. Entre com e-mail e senha." };
+  await iniciarSessao({ uid: criado.id, nome: criado.nome, perfil: "admin" });
+  redirect("/painel/configuracoes");
 }

@@ -22,19 +22,11 @@ O botão **Baixar planilha** gera um arquivo para o Excel com todos os pedidos d
 > O GitHub Pages **não serve** para este sistema: ele só publica páginas fixas, e aqui existem banco de dados, pedidos e login.
 > O caminho gratuito é a **Vercel**, ligada a este repositório do GitHub. Cada atualização no Git publica sozinha.
 
-1. **Banco de dados (Neon, grátis):** em [neon.tech](https://neon.tech), crie um projeto (região São Paulo) e copie a *connection string* (`postgresql://...`).
-2. **Criar as tabelas e os dados iniciais** (no computador, uma vez):
-   - Crie o arquivo `.env.producao` com:
-     ```
-     DATABASE_URL=postgresql://...   (a do Neon)
-     ADMIN_EMAIL=o-email-do-administrador
-     ```
-   - Rode `npm run db:producao`. O comando mostra a **senha provisória** do administrador. Guarde-a: ela é trocada no primeiro acesso.
-3. **Vercel:** em [vercel.com](https://vercel.com), escolha *Add New → Project*, importe este repositório e, em *Environment Variables*, preencha:
-   - `DATABASE_URL`: a mesma do Neon
-   - `SESSION_SECRET`: um texto aleatório e longo, gerado com `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`
-   - `SITE_URL`: o endereço final, ex.: `https://cantina-adolinda.vercel.app`
-4. Clique em **Deploy**. Depois entre em `/painel`, abra **Configurações**, envie a logo e preencha a chave Pix.
+1. **Neon:** no projeto, clique em **Connect** e copie a *connection string* (`postgresql://...`).
+2. **Vercel:** em *Settings → Environment Variables*, crie **`DATABASE_URL`** com esse valor (marque Production e Preview).
+   - Opcional: `SESSION_SECRET`, um texto aleatório longo. Sem ele, a chave de login é derivada do `DATABASE_URL`.
+3. **Redeploy:** em *Deployments*, abra o último deploy e use **⋯ → Redeploy**. Durante o deploy as tabelas e o cardápio são criados sozinhos no Neon.
+4. Abra **`/login`**: no primeiro acesso aparece a tela para criar o administrador. Depois, em **Configurações**, envie a logo e preencha a chave Pix.
 
 ## Desenvolvimento
 

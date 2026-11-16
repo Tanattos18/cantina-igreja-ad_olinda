@@ -1,14 +1,13 @@
-import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { count, eq } from "drizzle-orm";
-import { fecharDb, getDb, schema } from "../src/db";
+import { fecharDb, getDb, schema, type DB } from "../src/db";
 
 /**
- * Carga inicial: dados da AD Olinda, o cardápio dos cartazes da cantina e o administrador.
+ * Carga inicial: dados da AD Olinda e o cardápio dos cartazes da cantina.
+ * O administrador é criado na primeira visita ao /login (ou aqui, com ADMIN_EMAIL e ADMIN_PASSWORD).
  * Pode rodar mais de uma vez: só cria o que ainda não existe.
  */
-async function main() {
-  const db = await getDb();
+export async function cargaInicial(db: DB) {
 
   const [config] = await db.select().from(schema.configuracao).where(eq(schema.configuracao.id, 1));
   if (!config) {
@@ -44,26 +43,27 @@ async function main() {
   }
 
   const [{ u }] = await db.select({ u: count() }).from(schema.usuarios);
-  if (u === 0) {
-    const email = process.env.ADMIN_EMAIL || "admin@cantina.local";
-    const senha = process.env.ADMIN_PASSWORD || randomBytes(9).toString("base64url");
+  if (u === 0 && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
     await db.insert(schema.usuarios).values({
       nome: "Administrador",
-      email,
-      senhaHash: await bcrypt.hash(senha, 10),
+      email: process.env.ADMIN_EMAIL.toLowerCase(),
+      senhaHash: await bcrypt.hash(process.env.ADMIN_PASSWORD, 10),
       perfil: "admin",
-      trocarSenha: !process.env.ADMIN_PASSWORD,
     });
-    console.log(`Administrador criado: ${email}`);
-    if (!process.env.ADMIN_PASSWORD) console.log(`Senha provisória (troque no primeiro acesso): ${senha}`);
+    console.log(`Administrador criado: ${process.env.ADMIN_EMAIL}`);
+  } else if (u === 0) {
+    console.log("Sem administrador ainda: crie no primeiro acesso a /login.");
   }
+}
 
+async function main() {
+  await cargaInicial(await getDb());
   console.log("Carga inicial concluída.");
   await fecharDb();
   process.exit(0);
 }
 
-main().catch((e) => {
+if (process.argv[1]?.replace(/\\/g, "/").endsWith("scripts/seed.ts")) main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
