@@ -7,6 +7,7 @@ import { resumir } from "@/lib/vendas";
 import { ActionForm } from "@/components/action-form";
 import { Cabecalho, Campo } from "@/components/ui";
 import { criarVenda } from "./actions";
+import { BotaoSituacao } from "./botao-situacao";
 
 export const metadata = { title: "Vendas — Painel" };
 
@@ -30,10 +31,10 @@ export default async function VendasPage() {
 
   return (
     <div className="max-w-4xl">
-      <Cabecalho titulo="Vendas" descricao="Cada venda é um dia da cantina, com o seu cardápio e as quantidades produzidas." />
+      <Cabecalho titulo="Vendas" descricao="Cada venda é um dia de cantina. Crie a venda, confira os itens e clique em Abrir a cantina para o link começar a receber pedidos." />
 
       <details className="cartao mb-6" open={vendas.length === 0}>
-        <summary className="cursor-pointer font-titulos text-lg font-bold text-marinho">+ Nova venda</summary>
+        <summary className="cursor-pointer font-titulos text-lg font-bold text-marinho">+ Nova venda (um dia de cantina)</summary>
         <ActionForm action={criarVenda} botao="Criar venda" className="mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo rotulo="Título" className="sm:col-span-2">
@@ -49,7 +50,7 @@ export default async function VendasPage() {
               <input name="retirada" className="campo" maxLength={150} defaultValue="na cantina, após o culto" />
             </Campo>
           </div>
-          <p className="mt-3 text-sm text-stone-500">A venda começa com todos os itens do cardápio. Na próxima tela você ajusta preços e quantidades.</p>
+          <p className="mt-3 text-sm text-stone-500">A venda começa com todos os itens do cardápio. Na próxima tela você ajusta preços e quantidades e clica em <strong>🟢 Abrir a cantina</strong>.</p>
         </ActionForm>
       </details>
 
@@ -63,8 +64,8 @@ export default async function VendasPage() {
         {vendas.map((v) => {
           const r = resumir(porVenda.get(v.id) ?? []);
           return (
-            <li key={v.id}>
-              <Link href={`/painel/vendas/${v.id}`} className="cartao flex flex-wrap items-center gap-4 p-4 transition hover:border-marinho/40">
+            <li key={v.id} className="cartao flex flex-wrap items-center gap-3 p-4">
+              <Link href={`/painel/vendas/${v.id}`} className="flex min-w-0 flex-1 flex-wrap items-center gap-4 hover:opacity-80">
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">
                     {v.titulo}{" "}
@@ -79,6 +80,7 @@ export default async function VendasPage() {
                   {r.aReceber > 0 && <p className="text-xs font-semibold text-amber-800">{moeda(r.aReceber)} a receber</p>}
                 </div>
               </Link>
+              <BotaoSituacao vendaId={v.id} situacao={v.situacao} />
             </li>
           );
         })}

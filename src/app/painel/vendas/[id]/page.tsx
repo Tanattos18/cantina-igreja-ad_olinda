@@ -8,6 +8,7 @@ import { dataExtenso, dataHoraBR, moeda } from "@/lib/formato";
 import { aceitaPedidosNoSite, itensDaVenda, pedidosDaVenda, resumir, vendaPorId } from "@/lib/vendas";
 import { AutoAtualizar } from "@/components/auto-atualizar";
 import { Cabecalho, Indicador } from "@/components/ui";
+import { BotaoSituacao } from "../botao-situacao";
 import { CompartilharLink } from "./compartilhar";
 import { ListaPedidos } from "./lista-pedidos";
 
@@ -50,11 +51,21 @@ export default async function VendaPage({ params }: PageProps<"/painel/vendas/[i
           <>
             {venda.situacao === "aberta" && <Link href={`/painel/vendas/${venda.id}/balcao`} className="botao">+ Venda no balcão</Link>}
             <Link href={`/painel/vendas/${venda.id}/editar`} className="botao-sec">Editar venda</Link>
+            {venda.situacao === "aberta" && <BotaoSituacao vendaId={venda.id} situacao={venda.situacao} />}
             <a href={`/painel/vendas/${venda.id}/planilha`} className="botao-sec">Baixar planilha</a>
           </>
         }
       />
 
+      {venda.situacao !== "aberta" && (
+        <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border-2 border-green-700/30 bg-green-50 px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <p className="font-titulos text-xl font-bold text-green-900">A cantina está fechada para esta venda</p>
+            <p className="text-sm text-green-900/80">Abra para o cardápio aparecer no link e os pedidos começarem a chegar.</p>
+          </div>
+          <BotaoSituacao vendaId={venda.id} situacao={venda.situacao} grande />
+        </div>
+      )}
       {venda.situacao === "aberta" && <CompartilharLink url={urlDoSite()} titulo={venda.titulo} data={dataExtenso(venda.dataRetirada)} />}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

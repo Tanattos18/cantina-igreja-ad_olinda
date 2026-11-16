@@ -52,7 +52,15 @@ export default async function PainelLayout({ children }: LayoutProps<"/painel">)
           </div>
         </nav>
       </aside>
-      <main className="min-w-0 flex-1 p-4 md:p-8 print:p-0">{children}</main>
+      <main className="min-w-0 flex-1 p-4 md:p-8 print:p-0">
+        {!aberta && (
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-amarelo px-5 py-3 text-marinho print:hidden">
+            <p className="min-w-0 flex-1 font-bold">🔴 A cantina está fechada: o link mostra “Nenhuma venda aberta”.</p>
+            <Link href="/painel/vendas" className="botao">Abrir a cantina →</Link>
+          </div>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

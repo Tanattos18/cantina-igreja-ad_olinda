@@ -7,7 +7,8 @@ import { paraDataHoraLocal } from "@/lib/formato";
 import { itensDaVenda, vendaPorId } from "@/lib/vendas";
 import { ActionForm } from "@/components/action-form";
 import { Cabecalho, Campo } from "@/components/ui";
-import { adicionarItem, mudarSituacao, reativarItem, removerItem, salvarItem, salvarVenda } from "../../actions";
+import { adicionarItem, reativarItem, removerItem, salvarItem, salvarVenda } from "../../actions";
+import { BotaoSituacao } from "../../botao-situacao";
 
 export const metadata = { title: "Editar venda — Painel" };
 
@@ -32,19 +33,12 @@ export default async function EditarVenda({ params }: PageProps<"/painel/vendas/
         titulo="Editar venda"
         descricao={<Link href={`/painel/vendas/${venda.id}`} className="link">← Voltar aos pedidos</Link>}
         acoes={
-          <form action={mudarSituacao} className="flex gap-2">
-            <input type="hidden" name="id" value={venda.id} />
-            {venda.situacao !== "aberta" ? (
-              <button name="situacao" value="aberta" className="botao bg-green-700 hover:bg-green-800">Abrir para pedidos</button>
-            ) : (
-              <button name="situacao" value="encerrada" className="botao-perigo">Encerrar venda</button>
-            )}
-          </form>
+          <BotaoSituacao vendaId={venda.id} situacao={venda.situacao} grande />
         }
       />
       {venda.situacao !== "aberta" && (
         <p className="mb-4 rounded-xl bg-amarelo-claro px-4 py-3 text-sm text-amber-950">
-          Esta venda não aparece no link da loja. Confira os itens e clique em <strong>Abrir para pedidos</strong>. Abrir esta venda encerra a que estiver aberta.
+          A cantina está <strong>fechada</strong> para esta venda: ela não aparece no link. Confira os itens e clique em <strong>🟢 Abrir a cantina</strong>. Se outra venda estiver aberta, ela é fechada.
         </p>
       )}
 
