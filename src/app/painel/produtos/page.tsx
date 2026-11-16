@@ -12,7 +12,7 @@ export const metadata = { title: "Cardápio — Painel" };
 
 const valorBR = (v: number) => v.toFixed(2).replace(".", ",");
 
-function CamposProduto({ p }: { p?: typeof schema.produtos.$inferSelect }) {
+function CamposProduto({ p, categorias }: { p?: typeof schema.produtos.$inferSelect; categorias: string[] }) {
   return (
     <div className="grid gap-3 sm:grid-cols-[80px_1fr_120px]">
       {p && <input type="hidden" name="id" value={p.id} />}
@@ -24,6 +24,10 @@ function CamposProduto({ p }: { p?: typeof schema.produtos.$inferSelect }) {
       </Campo>
       <Campo rotulo="Preço (R$)">
         <input name="preco" className="campo" inputMode="decimal" required defaultValue={p ? valorBR(p.preco) : ""} placeholder="8,00" />
+      </Campo>
+      <Campo rotulo="Categoria (aba na loja)" className="sm:col-span-3">
+        <input name="categoria" className="campo" maxLength={40} list="categorias" defaultValue={p?.categoria ?? ""} placeholder="Ex.: Pamonhas, Salgados, Combos" />
+        <datalist id="categorias">{categorias.map((c) => <option key={c} value={c} />)}</datalist>
       </Campo>
       <Campo rotulo="Descrição (opcional)" className="sm:col-span-3">
         <input name="descricao" className="campo" maxLength={200} defaultValue={p?.descricao ?? ""} placeholder="Ex.: sabores sal, doce ou à moda" />
@@ -39,6 +43,7 @@ export default async function ProdutosPage() {
   await exigirUsuario();
   const db = await getDb();
   const produtos = await db.select().from(schema.produtos).orderBy(desc(schema.produtos.ativo), asc(schema.produtos.nome));
+  const categorias = [...new Set(produtos.map((p) => p.categoria).filter((c): c is string => !!c))].sort();
 
   return (
     <div className="max-w-3xl">
@@ -47,7 +52,7 @@ export default async function ProdutosPage() {
       <details className="cartao mb-6">
         <summary className="cursor-pointer font-titulos text-lg font-bold text-marinho">+ Novo produto</summary>
         <ActionForm action={salvarProduto} botao="Cadastrar" className="mt-4">
-          <CamposProduto />
+          <CamposProduto categorias={categorias} />
         </ActionForm>
       </details>
 
@@ -64,12 +69,12 @@ export default async function ProdutosPage() {
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block font-bold">{p.nome}{!p.ativo && <span className="ml-2 text-xs font-semibold text-stone-500">fora do cardápio</span>}</span>
-                  {p.descricao && <span className="block truncate text-sm text-stone-500">{p.descricao}</span>}
+                  <span className="block truncate text-sm text-stone-500">{[p.categoria, p.descricao].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className="font-titulos text-lg font-bold text-marinho">{moeda(p.preco)}</span>
               </summary>
               <ActionForm action={salvarProduto} className="mt-4 border-t border-[#f1ebe1] pt-4">
-                <CamposProduto p={p} />
+                <CamposProduto p={p} categorias={categorias} />
               </ActionForm>
               <form action={alternarProduto} className="mt-3">
                 <input type="hidden" name="id" value={p.id} />

@@ -30,15 +30,15 @@ async function main() {
   if (n === 0) {
     // Preços dos cartazes da cantina.
     await db.insert(schema.produtos).values([
-      { emoji: "🌽", nome: "Pamonha", descricao: "Sal, doce ou à moda (diga o sabor na observação)", preco: 12 },
-      { emoji: "🌽", nome: "Pamonha + bebida", descricao: "Pamonha de qualquer sabor com bebida", preco: 16 },
-      { emoji: "🥟", nome: "Esfirra", descricao: "Carne ou queijo", preco: 8 },
-      { emoji: "🥟", nome: "Esfirra + bebida", descricao: "Esfirra de carne ou queijo com bebida", preco: 12 },
-      { emoji: "🥧", nome: "Empada de frango", preco: 8 },
-      { emoji: "🥧", nome: "Empada + bebida", preco: 12 },
-      { emoji: "🍔", nome: "Disco de carne", preco: 8 },
-      { emoji: "🍔", nome: "Disco + refri", preco: 12 },
-      { emoji: "🌽", nome: "Bolinho de milho + bebida", descricao: "Bolinho frito de milho com bebida", preco: 12 },
+      { emoji: "🌽", categoria: "Pamonhas", nome: "Pamonha", descricao: "Sal, doce ou à moda (diga o sabor na observação)", preco: 12 },
+      { emoji: "🌽", categoria: "Combos", nome: "Pamonha + bebida", descricao: "Pamonha de qualquer sabor com bebida", preco: 16 },
+      { emoji: "🥟", categoria: "Salgados", nome: "Esfirra", descricao: "Carne ou queijo", preco: 8 },
+      { emoji: "🥟", categoria: "Combos", nome: "Esfirra + bebida", descricao: "Esfirra de carne ou queijo com bebida", preco: 12 },
+      { emoji: "🥧", categoria: "Salgados", nome: "Empada de frango", preco: 8 },
+      { emoji: "🥧", categoria: "Combos", nome: "Empada + bebida", preco: 12 },
+      { emoji: "🍔", categoria: "Salgados", nome: "Disco de carne", preco: 8 },
+      { emoji: "🍔", categoria: "Combos", nome: "Disco + refri", preco: 12 },
+      { emoji: "🌽", categoria: "Combos", nome: "Bolinho de milho + bebida", descricao: "Bolinho frito de milho com bebida", preco: 12 },
     ]);
     console.log("Cardápio criado.");
   }

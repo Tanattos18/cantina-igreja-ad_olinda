@@ -13,6 +13,7 @@ const Produto = z.object({
   id: z.coerce.number().int().positive().optional(),
   nome: z.string().min(2, "informe o nome").max(80),
   descricao: z.string().max(200).optional(),
+  categoria: z.string().max(40).optional(),
   emoji: z.string().max(16).optional(),
   preco: zValor,
 });
@@ -35,6 +36,7 @@ export async function salvarProduto(_: EstadoAcao, formData: FormData): Promise<
   const valores = {
     nome: dados.nome,
     descricao: dados.descricao ?? null,
+    categoria: dados.categoria ?? null,
     emoji: dados.emoji ?? null,
     preco: dados.preco,
     ...(imagemId !== undefined ? { imagemId } : {}),

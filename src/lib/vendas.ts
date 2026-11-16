@@ -15,6 +15,7 @@ export type PedidoComItens = Pedido & { itens: (typeof schema.pedidoItens.$infer
 export type ItemVitrine = ItemDaVenda & {
   produtoId: number;
   descricao: string | null;
+  categoria: string | null;
   emoji: string | null;
   imagemUrl: string | null;
 };
@@ -55,6 +56,7 @@ export async function itensDaVenda(db: Leitor, vendaId: number): Promise<ItemVit
         ativo: VI.ativo,
         nome: schema.produtos.nome,
         descricao: schema.produtos.descricao,
+        categoria: schema.produtos.categoria,
         emoji: schema.produtos.emoji,
         imagemId: schema.produtos.imagemId,
       })

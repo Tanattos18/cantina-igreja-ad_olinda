@@ -91,6 +91,8 @@ export const produtos = pgTable("produtos", {
   id: serial("id").primaryKey(),
   nome: text("nome").notNull(),
   descricao: text("descricao"),
+  // Agrupa o cardápio na loja (abas "Pamonhas", "Salgados", "Combos"). Vazio = "Cardápio".
+  categoria: text("categoria"),
   // Emoji mostrado no lugar da foto (🌽, 🥟, 🍗).
   emoji: text("emoji"),
   imagemId: integer("imagem_id").references(() => imagens.id),

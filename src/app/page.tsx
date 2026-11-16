@@ -20,40 +20,31 @@ export default async function Inicio() {
   const aberta = !!venda && aceitaPedidosNoSite(venda);
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="min-h-screen pb-28 lg:pb-10">
       <header className="relative overflow-hidden bg-marinho text-white">
-        <div aria-hidden className="absolute -top-24 -right-20 size-72 rounded-full bg-amarelo/15 blur-2xl" />
-        <div aria-hidden className="absolute -bottom-28 -left-16 size-64 rounded-full bg-amarelo/10 blur-2xl" />
-        <div className="relative mx-auto max-w-2xl px-4 pt-6 pb-10 sm:pt-8">
-          <div className="flex items-center gap-3">
-            <Logo nome={config.igreja ?? config.nome} versao={config.logoId} tamanho={52} />
-            <div className="min-w-0">
-              <p className="truncate text-xs font-semibold tracking-[0.18em] text-amarelo uppercase">{config.igreja ?? "Cantina"}</p>
-              {config.mensagem && <p className="truncate text-sm text-blue-100/80">{config.mensagem}</p>}
+        <div aria-hidden className="absolute -top-24 -right-16 size-72 rounded-full bg-amarelo/20 blur-3xl" />
+        <div className="relative mx-auto flex max-w-7xl items-center gap-3 px-4 py-4">
+          <Logo nome={config.igreja ?? config.nome} versao={config.logoId} tamanho={48} />
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-titulos text-2xl leading-tight font-bold sm:text-3xl">{config.nome}</h1>
+            {config.mensagem && <p className="truncate text-sm text-blue-100/80">{config.mensagem}</p>}
+          </div>
+        </div>
+        {venda && (
+          <div className="relative bg-amarelo text-marinho">
+            <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-0.5 px-4 py-2.5">
+              <p className="font-titulos text-lg font-bold">{venda.titulo}</p>
+              <p className="text-sm font-semibold">
+                📍 Retirada {dataExtenso(venda.dataRetirada)}
+                {venda.retirada && `, ${venda.retirada}`}
+                {venda.encerraEm && aberta && <span className="opacity-75"> · pedidos até {dataHoraBR(venda.encerraEm)}</span>}
+              </p>
             </div>
           </div>
-
-          <h1 className="mt-7 font-titulos text-4xl leading-tight font-bold sm:text-5xl">{config.nome}</h1>
-          {venda ? (
-            <div className="mt-4 space-y-1.5">
-              <p className="inline-flex items-center gap-2 rounded-full bg-amarelo px-3 py-1 text-sm font-bold text-marinho">
-                {venda.titulo}
-              </p>
-              <p className="text-blue-50">
-                Retirada <strong className="font-bold">{dataExtenso(venda.dataRetirada)}</strong>
-                {venda.retirada && <span className="text-blue-100/80"> · {venda.retirada}</span>}
-              </p>
-              {venda.encerraEm && aberta && (
-                <p className="text-sm text-blue-100/80">Pedidos até {dataHoraBR(venda.encerraEm)}</p>
-              )}
-            </div>
-          ) : (
-            <p className="mt-3 max-w-md text-blue-100/90">Faça seu pedido pelo celular e retire na cantina, sem fila.</p>
-          )}
-        </div>
+        )}
       </header>
 
-      <main className="relative mx-auto -mt-5 max-w-2xl px-4">
+      <main className="mx-auto max-w-7xl px-4 lg:pt-6">
         {!venda ? (
           <Aviso titulo="Nenhuma venda aberta agora" texto="Assim que a próxima venda da cantina for aberta, o cardápio aparece aqui. Fique de olho nos avisos da igreja!" />
         ) : !aberta ? (
@@ -72,8 +63,8 @@ export default async function Inicio() {
 
 function Aviso({ titulo, texto }: { titulo: string; texto: string }) {
   return (
-    <div className="cartao text-center">
-      <p className="text-4xl" aria-hidden>🍽️</p>
+    <div className="cartao mx-auto mt-6 max-w-xl text-center">
+      <p className="text-5xl" aria-hidden>🍽️</p>
       <h2 className="mt-2 font-titulos text-2xl font-bold text-marinho">{titulo}</h2>
       <p className="mx-auto mt-2 max-w-sm text-stone-600">{texto}</p>
     </div>
