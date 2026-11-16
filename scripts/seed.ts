@@ -1,6 +1,54 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import bcrypt from "bcryptjs";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import { fecharDb, getDb, schema, type DB } from "../src/db";
+
+const COMBO = /\+\s*(bebida|refri|refrigerante|suco)/i;
+
+/** Foto de cada produto (pasta fotos-produtos, licenças livres; créditos em /creditos-fotos). */
+const FOTOS: [RegExp, string][] = [
+  [/^pamonha/i, "pamonha"],
+  [/^esf(i|ir)r?h?a/i, "esfirra"],
+  [/^empada/i, "empada"],
+  [/^disco/i, "disco"],
+  [/^bolinho/i, "bolinho"],
+];
+
+/**
+ * Uma vez só: coloca as fotos nos produtos que ainda não têm. Depois disso não mexe mais,
+ * para não voltar uma foto que a equipe tirou ou trocou pelo painel.
+ */
+async function fotosIniciais(db: DB) {
+  const A = schema.auditoria;
+  const [feito] = await db.select({ id: A.id }).from(A).where(eq(A.acao, "fotos_iniciais")).limit(1);
+  if (feito) return;
+  const pasta = join(process.cwd(), "fotos-produtos");
+  const produtos = await db.select({ id: schema.produtos.id, nome: schema.produtos.nome }).from(schema.produtos).where(isNull(schema.produtos.imagemId));
+  const gravadas = new Map<string, number>();
+  let n = 0;
+  for (const p of produtos) {
+    const base = FOTOS.find(([re]) => re.test(p.nome.trim()))?.[1];
+    // Combos ("Esfirra + bebida", "Disco + refri"): a mesma foto com a latinha no canto.
+    const arquivo = base && (COMBO.test(p.nome) ? `${base}-combo` : base);
+    const caminho = arquivo && join(pasta, `${arquivo}.jpg`);
+    if (!arquivo || !caminho || !existsSync(caminho)) continue;
+    if (!gravadas.has(arquivo)) {
+      const [img] = await db
+        .insert(schema.imagens)
+        .values({ tipo: "image/jpeg", dados: readFileSync(caminho).toString("base64") })
+        .returning({ id: schema.imagens.id });
+      gravadas.set(arquivo, img.id);
+    }
+    await db
+      .update(schema.produtos)
+      .set({ imagemId: gravadas.get(arquivo)! })
+      .where(and(eq(schema.produtos.id, p.id), isNull(schema.produtos.imagemId)));
+    n++;
+  }
+  await db.insert(A).values({ acao: "fotos_iniciais", entidade: "produto", dados: { produtos: n } });
+  console.log(`Fotos colocadas em ${n} produtos.`);
+}
 
 /**
  * Carga inicial: dados da AD Olinda e o cardápio dos cartazes da cantina.
@@ -41,6 +89,8 @@ export async function cargaInicial(db: DB) {
     ]);
     console.log("Cardápio criado.");
   }
+
+  await fotosIniciais(db);
 
   const [{ u }] = await db.select({ u: count() }).from(schema.usuarios);
   if (u === 0 && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {

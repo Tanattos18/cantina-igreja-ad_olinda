@@ -13,6 +13,9 @@ export function Rodape({ config }: { config: Configuracao }) {
           @{config.instagram}
         </a>
       )}
+      <p className="mt-4 text-xs">
+        <a href="/creditos-fotos" className="hover:underline">Créditos das fotos</a>
+      </p>
     </footer>
   );
 }
