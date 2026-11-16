@@ -19,8 +19,8 @@ const csp = [
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite", "sharp"],
-  // Fontes da arte de compartilhamento (lidas do disco pelo opengraph-image).
-  outputFileTracingIncludes: { "/opengraph-image": ["./src/app/fontes/**"] },
+  // Fontes da arte de compartilhamento (lidas do disco pela rota /arte-compartilhar).
+  outputFileTracingIncludes: { "/arte-compartilhar": ["./src/app/fontes/**"] },
   poweredByHeader: false,
   // Logo e fotos enviadas pelo painel (já reduzidas no navegador, com folga).
   experimental: { serverActions: { bodySizeLimit: "3mb" } },

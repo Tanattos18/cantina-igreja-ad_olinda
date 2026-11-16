@@ -66,7 +66,7 @@ export default async function VendaPage({ params }: PageProps<"/painel/vendas/[i
           <BotaoSituacao vendaId={venda.id} situacao={venda.situacao} grande />
         </div>
       )}
-      {venda.situacao === "aberta" && <CompartilharLink url={urlDoSite()} titulo={venda.titulo} data={dataExtenso(venda.dataRetirada)} />}
+      {venda.situacao === "aberta" && <CompartilharLink url={`${urlDoSite()}/?v=${venda.id}`} titulo={venda.titulo} data={dataExtenso(venda.dataRetirada)} />}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicador destaque rotulo="Total vendido" valor={moeda(r.vendido)} detalhe={`${r.pedidos} ${r.pedidos === 1 ? "pedido" : "pedidos"}`} />

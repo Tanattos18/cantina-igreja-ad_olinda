@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { IconeWhatsApp } from "@/components/icones";
 
-/** Link da loja pronto para mandar no grupo da igreja. */
+/**
+ * Link da loja pronto para mandar no grupo da igreja. Leva "?v=<venda>" no fim: para o WhatsApp é um link
+ * novo a cada venda, então a prévia (arte com a data) não fica presa na venda anterior.
+ */
 export function CompartilharLink({ url, titulo, data }: { url: string; titulo: string; data: string }) {
   const [copiado, setCopiado] = useState(false);
   const texto = `🍽️ *${titulo}*\nRetirada ${data}.\nFaça seu pedido pelo celular e retire sem fila:\n${url}`;

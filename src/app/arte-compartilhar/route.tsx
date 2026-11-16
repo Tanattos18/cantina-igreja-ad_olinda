@@ -9,12 +9,13 @@ import { dataExtenso } from "@/lib/formato";
 import { lerImagem } from "@/lib/imagens";
 import { vendaAberta } from "@/lib/vendas";
 
-/** Arte que aparece quando o link da cantina é compartilhado (WhatsApp, Instagram, Facebook). */
-export const alt = "Cantina AD Olinda: faça seu pedido pelo celular";
-export const size = { width: 1200, height: 630 };
-// JPEG leve: o WhatsApp deixa de mostrar a prévia quando a imagem é pesada.
-export const contentType = "image/jpeg";
-// Lê a logo e as fotos do banco a cada pedido (trocou no painel, a arte acompanha).
+/**
+ * Arte que aparece quando o link da cantina é compartilhado (WhatsApp, Instagram, Facebook).
+ * A página aponta para cá com "?venda=<id>": cada venda tem um endereço de imagem próprio, então o
+ * WhatsApp (que guarda a prévia por endereço) mostra a data nova a cada domingo.
+ * Lê a logo e as fotos do banco a cada pedido: trocou no painel, a arte acompanha.
+ */
+const size = { width: 1200, height: 630 };
 export const dynamic = "force-dynamic";
 
 const fonte = (arquivo: string) => readFile(join(process.cwd(), "src/app/fontes", arquivo));
@@ -24,7 +25,7 @@ const AMARELO = "#f7c41b";
 
 const comoDataUrl = (img: { tipo: string; dados: string } | undefined) => (img ? `data:${img.tipo};base64,${img.dados}` : null);
 
-export default async function Image() {
+export async function GET() {
   const db = await getDb();
   const [config, venda, titulos, textoForte, textoExtra] = await Promise.all([
     lerConfiguracao(db),

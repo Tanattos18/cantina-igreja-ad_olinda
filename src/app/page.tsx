@@ -9,13 +9,23 @@ import { Rodape } from "./rodape";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
-  const c = await lerConfiguracao(await getDb());
+  const db = await getDb();
+  const [c, venda] = await Promise.all([lerConfiguracao(db), vendaAberta(db)]);
+  // Endereço da imagem muda a cada venda (e quando a logo muda): o WhatsApp busca a arte nova.
+  const imagem = {
+    url: `/arte-compartilhar?venda=${venda?.id ?? 0}&logo=${c.logoId ?? 0}`,
+    width: 1200,
+    height: 630,
+    type: "image/jpeg",
+    alt: `${c.nome}: faça seu pedido pelo celular`,
+  };
   const titulo = `${c.nome} — Faça seu pedido`;
   const descricao = `${c.mensagem ? `${c.mensagem}. ` : ""}Peça pelo celular, pague no Pix ou na retirada e pegue sem fila.`;
   return {
     title: titulo,
     description: descricao,
-    openGraph: { title: titulo, description: descricao, siteName: c.nome, locale: "pt_BR", type: "website", url: "/" },
+    openGraph: { title: titulo, description: descricao, siteName: c.nome, locale: "pt_BR", type: "website", url: "/", images: [imagem] },
+    twitter: { card: "summary_large_image", title: titulo, description: descricao, images: [imagem] },
   };
 }
 
