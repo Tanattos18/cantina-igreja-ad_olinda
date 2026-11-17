@@ -8,6 +8,7 @@ import { getDb, schema } from "@/db";
 import { auditar } from "@/lib/auditoria";
 import { exigirAdmin } from "@/lib/auth";
 import { lerConfiguracao } from "@/lib/config";
+import { normalizarTelefone } from "@/lib/dominio";
 import { mensagemConvite, novoConvite, senhaInutilizavel } from "@/lib/convite";
 import { lerForm, zSenha, type EstadoAcao } from "@/lib/form";
 
@@ -54,6 +55,7 @@ const Edicao = z.object({
   nome: z.string().min(2, "informe o nome").max(80),
   email: z.email("e-mail inválido"),
   perfil: zPerfil.optional(),
+  whatsapp: z.string().max(30).optional(),
 });
 
 /** Nome, e-mail e perfil. O administrador não muda o próprio perfil (para não se trancar fora). */
@@ -68,7 +70,9 @@ export async function editarUsuario(_: EstadoAcao, formData: FormData): Promise<
     .from(schema.usuarios)
     .where(and(eq(schema.usuarios.email, email), ne(schema.usuarios.id, dados.id)));
   if (repetido) return { erro: "Esse e-mail já é de outra pessoa da equipe." };
-  const mudanca = { nome: dados.nome, email, ...(dados.perfil && dados.id !== admin.uid ? { perfil: dados.perfil } : {}) };
+  const whatsapp = dados.whatsapp ? normalizarTelefone(dados.whatsapp) : null;
+  if (dados.whatsapp && !whatsapp) return { erro: "WhatsApp inválido. Use DDD + número, ex.: (62) 99999-0000." };
+  const mudanca = { nome: dados.nome, email, whatsapp, ...(dados.perfil && dados.id !== admin.uid ? { perfil: dados.perfil } : {}) };
   const r = await db.update(schema.usuarios).set(mudanca).where(eq(schema.usuarios.id, dados.id)).returning({ id: schema.usuarios.id });
   if (!r.length) return { erro: "Pessoa não encontrada." };
   await auditar(db, admin.uid, "editar", "usuario", dados.id, mudanca);

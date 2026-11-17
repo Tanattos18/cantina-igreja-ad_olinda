@@ -51,7 +51,7 @@ export const configuracao = pgTable("configuracao", {
   cultos: text("cultos"),
   // Só o usuário, sem @.
   instagram: text("instagram"),
-  // Só dígitos, com DDI: 5581999990000. Recebe os comprovantes de Pix.
+  // Só dígitos, com DDI. Reserva: recebe os comprovantes quando o caixa da venda não tem WhatsApp.
   whatsapp: text("whatsapp"),
   pixTipo: text("pix_tipo", { enum: TIPOS_CHAVE_PIX }),
   pixChave: text("pix_chave"),
@@ -67,6 +67,8 @@ export const usuarios = pgTable("usuarios", {
   email: text("email").notNull().unique(),
   senhaHash: text("senha_hash").notNull(),
   perfil: text("perfil", { enum: ["admin", "voluntario"] }).notNull().default("voluntario"),
+  // Só dígitos, com DDI. Quando a pessoa é o caixa da venda, recebe os comprovantes de Pix.
+  whatsapp: text("whatsapp"),
   ativo: boolean("ativo").notNull().default(true),
   // Senha provisória (criada por outra pessoa): obriga a troca no próximo acesso.
   trocarSenha: boolean("trocar_senha").notNull().default(false),
@@ -117,6 +119,8 @@ export const vendas = pgTable(
     // Depois deste momento o site para de aceitar pedidos (a venda no balcão continua).
     encerraEm: timestamp("encerra_em", { withTimezone: true }),
     situacao: text("situacao", { enum: SITUACAO_VENDA }).notNull().default("rascunho"),
+    // Quem fica no caixa (quem abriu a cantina, ou escolhido em Editar venda): recebe os comprovantes.
+    caixaUsuarioId: integer("caixa_usuario_id").references(() => usuarios.id),
     criadoEm: criadoEm(),
   },
   (t) => [index("vendas_situacao_idx").on(t.situacao, t.dataRetirada)],

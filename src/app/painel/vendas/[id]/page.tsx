@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db";
 import { exigirUsuario } from "@/lib/auth";
-import { urlDoSite } from "@/lib/config";
+import { lerConfiguracao, urlDoSite } from "@/lib/config";
 import { restante } from "@/lib/dominio";
 import { dataExtenso, dataHoraBR, moeda } from "@/lib/formato";
 import { aceitaPedidosNoSite, itensDaVenda, pedidosDaVenda, resumir, vendaPorId } from "@/lib/vendas";
@@ -10,6 +10,7 @@ import { AutoAtualizar } from "@/components/auto-atualizar";
 import { Cabecalho, Indicador } from "@/components/ui";
 import { BotaoSituacao } from "../botao-situacao";
 import { CompartilharLink } from "./compartilhar";
+import { SeletorCaixa } from "../seletor-caixa";
 import { ListaPedidos } from "./lista-pedidos";
 
 export const metadata = { title: "Pedidos — Painel" };
@@ -66,6 +67,7 @@ export default async function VendaPage({ params }: PageProps<"/painel/vendas/[i
           <BotaoSituacao vendaId={venda.id} situacao={venda.situacao} grande />
         </div>
       )}
+      {venda.situacao === "aberta" && <SeletorCaixa vendaId={venda.id} caixaUsuarioId={venda.caixaUsuarioId} reserva={(await lerConfiguracao(db)).whatsapp} />}
       {venda.situacao === "aberta" && <CompartilharLink url={`${urlDoSite()}/?v=${venda.id}`} titulo={venda.titulo} data={dataExtenso(venda.dataRetirada)} />}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

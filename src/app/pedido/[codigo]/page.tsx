@@ -6,6 +6,7 @@ import { lerConfiguracao, pixDoPedido, urlDoSite } from "@/lib/config";
 import { ROTULO_ESTADO, ROTULO_MEIO, estadoPedido, linkWhatsApp } from "@/lib/dominio";
 import { dataExtenso, moeda } from "@/lib/formato";
 import { pedidoPorCodigo, vendaPorId } from "@/lib/vendas";
+import { caixaDaVenda } from "@/lib/caixa";
 import { AutoAtualizar } from "@/components/auto-atualizar";
 import { IconeCheck, IconeWhatsApp } from "@/components/icones";
 import { Logo } from "@/components/marca";
@@ -35,9 +36,10 @@ export default async function PedidoPage({ params }: PageProps<"/pedido/[codigo]
   const pix = mostrarPix ? pixDoPedido(config, pedido) : null;
   const qr = pix ? await QRCode.toDataURL(pix, { margin: 1, width: 560, color: { dark: "#0f2747", light: "#ffffff" } }) : null;
   const link = `${urlDoSite()}/pedido/${pedido.codigo}`;
-  const whatsapp = config.whatsapp
+  const caixa = await caixaDaVenda(db, venda, config);
+  const whatsapp = caixa.whatsapp
     ? linkWhatsApp(
-        config.whatsapp,
+        caixa.whatsapp,
         mostrarPix
           ? `Olá! Segue o comprovante do Pix do pedido nº ${pedido.numero} (${pedido.clienteNome}), ${moeda(pedido.total)}.\n${link}`
           : `Olá! Sobre o meu pedido nº ${pedido.numero} (${pedido.clienteNome}): ${link}`,
@@ -100,7 +102,7 @@ export default async function PedidoPage({ params }: PageProps<"/pedido/[codigo]
             )}
             {whatsapp && (
               <a href={whatsapp} target="_blank" rel="noopener" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1fa855] px-4 py-3 font-bold text-white hover:bg-[#178a45]">
-                <IconeWhatsApp /> Enviar comprovante
+                <IconeWhatsApp /> Enviar comprovante{caixa.nome ? ` para ${caixa.nome.split(" ")[0]}` : ""}
               </a>
             )}
           </section>

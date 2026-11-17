@@ -354,6 +354,9 @@ function Card({ item, q, abrir }: { item: ItemVitrine; q: number; abrir: () => v
             {item.emoji || "🍽️"}
           </span>
         )}
+        {item.imagemUrl && (
+          <span className="absolute top-2 left-2 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">Imagem ilustrativa</span>
+        )}
         {q > 0 && <span className="absolute top-2 right-2 grid size-9 place-items-center rounded-full bg-marinho text-base font-extrabold text-amarelo shadow-lg">{q}</span>}
         {!esgotado && resta != null && resta <= 15 && (
           <span className="absolute bottom-2 left-2 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-extrabold text-white shadow">
@@ -407,7 +410,8 @@ function JanelaItem({ item, atual, fechar, salvar }: { item: ItemVitrine; atual:
         <button type="button" onClick={fechar} className="absolute top-3 right-3 z-10 grid size-10 place-items-center rounded-full bg-white/90 text-marinho shadow" aria-label="Fechar">
           <IconeFechar />
         </button>
-        <div className="aspect-[4/3] bg-gradient-to-br from-amarelo-claro via-[#fbe7a3] to-amarelo">
+        <div className="relative aspect-[4/3] bg-gradient-to-br from-amarelo-claro via-[#fbe7a3] to-amarelo">
+          {item.imagemUrl && <span className="absolute bottom-3 left-3 rounded-full bg-black/45 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">Imagem ilustrativa</span>}
           {item.imagemUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- foto enviada pelo painel
             <img src={item.imagemUrl} alt="" className="size-full object-cover" />

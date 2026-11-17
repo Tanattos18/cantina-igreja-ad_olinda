@@ -30,9 +30,9 @@ export async function GET() {
   const [config, venda, titulos, textoForte, textoExtra] = await Promise.all([
     lerConfiguracao(db),
     vendaAberta(db),
-    fonte("fraunces-latin-700-normal.woff"),
-    fonte("nunito-sans-latin-700-normal.woff"),
-    fonte("nunito-sans-latin-800-normal.woff"),
+    fonte("montserrat-latin-800-normal.woff"),
+    fonte("montserrat-latin-600-normal.woff"),
+    fonte("montserrat-latin-700-normal.woff"),
   ]);
 
   // Até 3 fotos diferentes dos salgados (sem repetir a mesma imagem dos combos).
@@ -52,7 +52,7 @@ export async function GET() {
 
   const png = new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", background: MARINHO, position: "relative", fontFamily: "Nunito" }}>
+      <div style={{ width: "100%", height: "100%", display: "flex", background: MARINHO, position: "relative", fontFamily: "Montserrat" }}>
         {/* Brilho amarelo ao fundo */}
         <div style={{ position: "absolute", top: -160, right: 260, width: 520, height: 520, borderRadius: 999, background: AMARELO, opacity: 0.16 }} />
         <div style={{ position: "absolute", bottom: -200, left: -120, width: 460, height: 460, borderRadius: 999, background: AMARELO, opacity: 0.08 }} />
@@ -64,7 +64,7 @@ export async function GET() {
               // eslint-disable-next-line @next/next/no-img-element -- imagem gerada pelo ImageResponse
               <img alt="" src={logoUrl} width={96} height={96} style={{ objectFit: "contain", borderRadius: 18, flexShrink: 0 }} />
             ) : (
-              <div style={{ width: 96, height: 96, flexShrink: 0, borderRadius: 999, background: AMARELO, color: MARINHO, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Fraunces", fontSize: 40 }}>
+              <div style={{ width: 96, height: 96, flexShrink: 0, borderRadius: 999, background: AMARELO, color: MARINHO, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Montserrat", fontWeight: 800, fontSize: 36 }}>
                 AD
               </div>
             )}
@@ -74,7 +74,7 @@ export async function GET() {
             </div>
           </div>
 
-          <div style={{ display: "flex", color: "white", fontFamily: "Fraunces", fontSize: 78, lineHeight: 1.02, marginTop: 40 }}>{config.nome}</div>
+          <div style={{ display: "flex", color: "white", fontFamily: "Montserrat", fontWeight: 800, fontSize: 70, lineHeight: 1.04, letterSpacing: -1, marginTop: 40 }}>{config.nome}</div>
 
           <div style={{ display: "flex", marginTop: 26 }}>
             <div style={{ display: "flex", background: AMARELO, color: MARINHO, fontSize: 30, fontWeight: 800, padding: "12px 28px", borderRadius: 999 }}>
@@ -117,9 +117,9 @@ export async function GET() {
     {
       ...size,
       fonts: [
-        { name: "Fraunces", data: titulos, weight: 700, style: "normal" },
-        { name: "Nunito", data: textoForte, weight: 700, style: "normal" },
-        { name: "Nunito", data: textoExtra, weight: 800, style: "normal" },
+        { name: "Montserrat", data: textoForte, weight: 600, style: "normal" },
+        { name: "Montserrat", data: textoExtra, weight: 700, style: "normal" },
+        { name: "Montserrat", data: titulos, weight: 800, style: "normal" },
       ],
     },
   );

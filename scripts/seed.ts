@@ -99,8 +99,10 @@ async function fotosIniciais(db: DB) {
  * O administrador é criado na primeira visita ao /login (ou aqui, com ADMIN_EMAIL e ADMIN_PASSWORD).
  * Pode rodar mais de uma vez: só cria o que ainda não existe.
  */
-export async function cargaInicial(db: DB) {
+/** Número de reservas do cartaz da Pamonhada, que a primeira versão usou por engano. */
+const NUMERO_DO_CARTAZ = "5562999639318";
 
+export async function cargaInicial(db: DB) {
   const [config] = await db.select().from(schema.configuracao).where(eq(schema.configuracao.id, 1));
   if (!config) {
     await db.insert(schema.configuracao).values({
@@ -111,10 +113,13 @@ export async function cargaInicial(db: DB) {
       endereco: "Rua MA-14, Qd. 02, Lt. 09 — Residencial Olinda",
       cultos: "Domingo 18h30 · Quarta 20h",
       instagram: "ad.olinda.oficial",
-      // Telefone de reservas do cartaz da Pamonhada; confirme em Configurações.
-      whatsapp: "5562999639318",
     });
     console.log("Configuração criada (preencha a chave Pix no painel).");
+  } else if (config.whatsapp === NUMERO_DO_CARTAZ) {
+    // O número do cartaz da Pamonhada era o celular pessoal de quem coordena: os comprovantes
+    // passam a ir para o caixa da venda (WhatsApp de cada pessoa em Minha conta).
+    await db.update(schema.configuracao).set({ whatsapp: null }).where(eq(schema.configuracao.id, 1));
+    console.log("WhatsApp de reserva removido (era o número do cartaz).");
   }
 
   const [{ n }] = await db.select({ n: count() }).from(schema.produtos);

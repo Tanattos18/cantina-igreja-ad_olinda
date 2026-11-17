@@ -7,6 +7,7 @@ import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { auditar } from "@/lib/auditoria";
 import { exigirLogin, exigirUsuario } from "@/lib/auth";
+import { normalizarTelefone } from "@/lib/dominio";
 import { lerForm, zSenha, type EstadoAcao } from "@/lib/form";
 
 const TrocaSenha = z.object({ atual: z.string().min(1), nova: zSenha });
@@ -29,15 +30,18 @@ export async function trocarSenha(_: EstadoAcao, formData: FormData): Promise<Es
   return { ok: "Senha alterada." };
 }
 
-const MeuNome = z.object({ nome: z.string().min(2, "informe seu nome").max(80) });
+const MeuNome = z.object({ nome: z.string().min(2, "informe seu nome").max(80), whatsapp: z.string().max(30).optional() });
 
+/** Nome e WhatsApp (o WhatsApp recebe os comprovantes de Pix quando a pessoa é o caixa da venda). */
 export async function salvarMeuNome(_: EstadoAcao, formData: FormData): Promise<EstadoAcao> {
   const usuario = await exigirUsuario();
   const { dados, erro } = lerForm(formData, MeuNome);
   if (!dados) return { erro };
+  const whatsapp = dados.whatsapp ? normalizarTelefone(dados.whatsapp) : null;
+  if (dados.whatsapp && !whatsapp) return { erro: "WhatsApp inválido. Use DDD + número, ex.: (62) 99999-0000." };
   const db = await getDb();
-  await db.update(schema.usuarios).set({ nome: dados.nome }).where(eq(schema.usuarios.id, usuario.uid));
-  await auditar(db, usuario.uid, "editar_nome", "usuario", usuario.uid, { nome: dados.nome });
-  revalidatePath("/painel", "layout");
-  return { ok: "Nome salvo." };
+  await db.update(schema.usuarios).set({ nome: dados.nome, whatsapp }).where(eq(schema.usuarios.id, usuario.uid));
+  await auditar(db, usuario.uid, "editar_dados", "usuario", usuario.uid, { nome: dados.nome, whatsapp: !!whatsapp });
+  revalidatePath("/", "layout");
+  return { ok: "Dados salvos." };
 }

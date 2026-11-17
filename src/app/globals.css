@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-texto);
-  --font-titulos: var(--font-titulos);
+  --font-sans: var(--font-montserrat);
+  --font-titulos: var(--font-montserrat);
 }
 
 /* Cores da AD Olinda (cartazes da cantina): azul-marinho, amarelo e creme. */

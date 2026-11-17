@@ -1,6 +1,7 @@
 import { asc } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { exigirAdmin } from "@/lib/auth";
+import { telefoneBR } from "@/lib/dominio";
 import { ActionForm } from "@/components/action-form";
 import { Cabecalho, Campo } from "@/components/ui";
 import { alternarAcesso, criarUsuario, definirSenhaProvisoria, editarUsuario, gerarConvite } from "./actions";
@@ -55,6 +56,7 @@ export default async function EquipePage() {
                   </p>
                   <p className="text-sm text-stone-500">
                     {u.email} · {PERFIL[u.perfil]}
+                    {u.whatsapp ? ` · ${telefoneBR(u.whatsapp)}` : " · sem WhatsApp"}
                   </p>
                   <p className="mt-0.5 text-xs font-semibold">
                     {!u.ativo ? (
@@ -83,9 +85,12 @@ export default async function EquipePage() {
                 <summary className="cursor-pointer text-sm font-semibold text-marinho">Editar dados e senha</summary>
                 <ActionForm action={editarUsuario} botao="Salvar dados" botaoClasse="botao-sec" className="mt-3">
                   <input type="hidden" name="id" value={u.id} />
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <Campo rotulo="Nome"><input name="nome" className="campo" required maxLength={80} defaultValue={u.nome} /></Campo>
                     <Campo rotulo="E-mail"><input name="email" type="email" className="campo" required defaultValue={u.email} /></Campo>
+                    <Campo rotulo="WhatsApp (recebe os comprovantes quando for o caixa)">
+                      <input name="whatsapp" type="tel" inputMode="tel" className="campo" maxLength={30} defaultValue={telefoneBR(u.whatsapp)} placeholder="(62) 99999-0000" />
+                    </Campo>
                     <Campo rotulo="Perfil">
                       <select name="perfil" className="campo" defaultValue={u.perfil} disabled={eu}>
                         <option value="voluntario">Voluntário</option>

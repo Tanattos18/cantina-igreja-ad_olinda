@@ -9,6 +9,8 @@ import { ActionForm } from "@/components/action-form";
 import { Cabecalho, Campo } from "@/components/ui";
 import { adicionarItem, reativarItem, removerItem, salvarItem, salvarVenda } from "../../actions";
 import { BotaoSituacao } from "../../botao-situacao";
+import { SeletorCaixa } from "../../seletor-caixa";
+import { lerConfiguracao } from "@/lib/config";
 
 export const metadata = { title: "Editar venda — Painel" };
 
@@ -20,9 +22,10 @@ export default async function EditarVenda({ params }: PageProps<"/painel/vendas/
   const db = await getDb();
   const venda = Number.isInteger(id) ? await vendaPorId(db, id) : undefined;
   if (!venda) notFound();
-  const [itens, produtos] = await Promise.all([
+  const [itens, produtos, config] = await Promise.all([
     itensDaVenda(db, venda.id),
     db.select().from(schema.produtos).where(eq(schema.produtos.ativo, true)).orderBy(asc(schema.produtos.nome)),
+    lerConfiguracao(db),
   ]);
   const naVenda = new Set(itens.filter((i) => i.ativo).map((i) => i.produtoId));
   const faltando = produtos.filter((p) => !naVenda.has(p.id));
@@ -41,6 +44,8 @@ export default async function EditarVenda({ params }: PageProps<"/painel/vendas/
           A cantina está <strong>fechada</strong> para esta venda: ela não aparece no link. Confira os itens e clique em <strong>🟢 Abrir a cantina</strong>. Se outra venda estiver aberta, ela é fechada.
         </p>
       )}
+
+      <SeletorCaixa vendaId={venda.id} caixaUsuarioId={venda.caixaUsuarioId} reserva={config.whatsapp} />
 
       <ActionForm action={salvarVenda} className="cartao mb-6" botao="Salvar dados">
         <input type="hidden" name="id" value={venda.id} />

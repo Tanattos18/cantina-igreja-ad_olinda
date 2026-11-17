@@ -38,7 +38,7 @@ export default async function ConfiguracoesPage() {
           <h2 className="font-titulos text-lg font-bold text-marinho">Pix e WhatsApp</h2>
           <p className="mt-1 text-sm text-stone-500">
             Com o Pix preenchido, o cliente pode pagar pelo site: aparece o QR code com o valor exato do pedido, direto na conta da igreja, sem taxa.
-            A equipe confere o comprovante e marca como pago.
+            O comprovante vai para o WhatsApp de quem está no caixa da venda (quem abriu a cantina, ou o escolhido na tela de pedidos).
           </p>
           <p className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${pixConfigurado(c) ? "bg-green-100 text-green-800" : "bg-amarelo-claro text-amber-900"}`}>
             {pixConfigurado(c) ? "Pix pelo site ligado" : "Pix pelo site desligado: só pagamento na retirada"}
@@ -53,7 +53,7 @@ export default async function ConfiguracoesPage() {
             <Campo rotulo="Chave Pix"><input name="pixChave" className="campo" maxLength={100} defaultValue={c.pixChave ?? ""} autoComplete="off" /></Campo>
             <Campo rotulo="Nome de quem recebe (como no banco)"><input name="pixNome" className="campo" maxLength={60} defaultValue={c.pixNome ?? ""} /></Campo>
             <Campo rotulo="Cidade de quem recebe"><input name="pixCidade" className="campo" maxLength={40} defaultValue={c.pixCidade ?? ""} placeholder="Goiânia" /></Campo>
-            <Campo rotulo="WhatsApp da cantina (recebe os comprovantes)" className="sm:col-span-2">
+            <Campo rotulo="WhatsApp reserva (só quando o caixa da venda não tiver WhatsApp; pode ficar vazio)" className="sm:col-span-2">
               <input name="whatsapp" type="tel" className="campo" maxLength={30} defaultValue={telefoneBR(c.whatsapp)} placeholder="(62) 99999-0000" />
             </Campo>
           </div>

@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, desc, eq, ne } from "drizzle-orm";
+import { and, count, desc, eq, isNull, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -71,6 +71,11 @@ export async function abrirCantina() {
       }
     }
     await tx.update(schema.vendas).set({ situacao: "aberta" }).where(eq(schema.vendas.id, venda.id));
+    // Quem abre fica como caixa (recebe os comprovantes), se ninguém foi escolhido antes.
+    await tx
+      .update(schema.vendas)
+      .set({ caixaUsuarioId: usuario.uid })
+      .where(and(eq(schema.vendas.id, venda.id), isNull(schema.vendas.caixaUsuarioId)));
     await auditar(tx, usuario.uid, "abrir_cantina", "venda", venda.id);
     return venda.id;
   });
@@ -104,6 +109,9 @@ export async function mudarSituacao(formData: FormData) {
       await tx.update(schema.vendas).set({ situacao: "encerrada" }).where(and(eq(schema.vendas.situacao, "aberta"), ne(schema.vendas.id, id)));
     }
     await tx.update(schema.vendas).set({ situacao: para }).where(eq(schema.vendas.id, id));
+    if (para === "aberta") {
+      await tx.update(schema.vendas).set({ caixaUsuarioId: usuario.uid }).where(and(eq(schema.vendas.id, id), isNull(schema.vendas.caixaUsuarioId)));
+    }
     await auditar(tx, usuario.uid, "situacao", "venda", id, { para });
   });
   revalidatePath("/", "layout");
@@ -166,4 +174,21 @@ export async function reativarItem(formData: FormData) {
   const db = await getDb();
   const [item] = await db.update(schema.vendaItens).set({ ativo: true }).where(eq(schema.vendaItens.id, id)).returning({ vendaId: schema.vendaItens.vendaId });
   if (item) revalidatePath(`/painel/vendas/${item.vendaId}`, "layout");
+}
+
+/** Quem fica no caixa da venda: recebe no WhatsApp os comprovantes de Pix dos clientes. */
+export async function definirCaixa(_: EstadoAcao, formData: FormData): Promise<EstadoAcao> {
+  const usuario = await exigirUsuario();
+  const vendaId = Number(formData.get("vendaId"));
+  const caixaId = Number(formData.get("caixaUsuarioId")) || null;
+  const db = await getDb();
+  if (caixaId) {
+    const [u] = await db.select({ ativo: schema.usuarios.ativo }).from(schema.usuarios).where(eq(schema.usuarios.id, caixaId));
+    if (!u?.ativo) return { erro: "Pessoa não encontrada na equipe." };
+  }
+  const r = await db.update(schema.vendas).set({ caixaUsuarioId: caixaId }).where(eq(schema.vendas.id, vendaId)).returning({ id: schema.vendas.id });
+  if (!r.length) return { erro: "Venda não encontrada." };
+  await auditar(db, usuario.uid, "caixa", "venda", vendaId, { caixaUsuarioId: caixaId });
+  revalidatePath("/", "layout");
+  return { ok: "Caixa salvo." };
 }
