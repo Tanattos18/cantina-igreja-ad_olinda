@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import bcrypt from "bcryptjs";
@@ -6,14 +7,62 @@ import { fecharDb, getDb, schema, type DB } from "../src/db";
 
 const COMBO = /\+\s*(bebida|refri|refrigerante|suco)/i;
 
-/** Foto de cada produto (pasta fotos-produtos, licenças livres; créditos em /creditos-fotos). */
+/** Foto de cada produto (pasta fotos-produtos, feitas dos cartazes da cantina por scripts/fotos-cartazes.ts). */
 const FOTOS: [RegExp, string][] = [
   [/^pamonha/i, "pamonha"],
   [/^esf(i|ir)r?h?a/i, "esfirra"],
   [/^empada/i, "empada"],
   [/^disco/i, "disco"],
   [/^bolinho/i, "bolinho"],
+  [/^panqueca/i, "panqueca"],
 ];
+
+/** Arquivo da foto de um produto pelo nome ("Esfirra + bebida" → esfirra-combo). */
+function fotoDoProduto(nome: string): string | undefined {
+  const base = FOTOS.find(([re]) => re.test(nome.trim()))?.[1];
+  return base && (COMBO.test(nome) ? `${base}-combo` : base);
+}
+
+/** SHA-256 das fotos ilustrativas antigas (Wikimedia), para trocar só essas e nunca uma foto enviada pela equipe. */
+const FOTOS_ANTIGAS = new Set([
+  "b4fbe569e52cac36e3f60e38e858b15caa3f8f942d29b4e3c72a3245d7822492", "e31f8b5f3a4e6dbafef563ae7136dade051f615f72ae5717c11b4d2d9a4b4694",
+  "7be368a5f77ea2cbd1994733c333dae11c8cbc8723cd9951d78f4db206cebc92", "924bde05ac2f54c1bfc7bb634e714d0d982234265ae0d57962848f065b9866c8",
+  "29d00a0269a0b24817f1c1ea82264cb88b782ebe2f803c2f80dc2724aca59b29", "6dd012da1724dd4efaa3bbf7b3b2081793f81d38f86c14cc2b0d1ee303b8524c",
+  "610037c70d42fcef501151c72356065f7d66d50d4f7bc631591222d29cd66938", "87147341e9dc77d2dfeff04a0cb6e98c9062e6745a4947acdd193f20f1ee5381",
+  "221aaea38518d55cefeb995e4718516b5e5509ac247d8a5cbf99a8be4daab962", "b3978204a66a44cbceec60d0f09c43e37f8005419bf5b173b858136194e1117b",
+]);
+
+/**
+ * Uma vez só: troca as fotos ilustrativas antigas pelas dos cartazes da cantina (e põe foto em quem não tem).
+ * Foto enviada pela equipe no painel não é tocada.
+ */
+async function fotosDosCartazes(db: DB) {
+  const A = schema.auditoria;
+  const [feito] = await db.select({ id: A.id }).from(A).where(eq(A.acao, "fotos_cartazes_v1")).limit(1);
+  if (feito) return;
+  const pasta = join(process.cwd(), "fotos-produtos");
+  const produtos = await db
+    .select({ id: schema.produtos.id, nome: schema.produtos.nome, imagemId: schema.produtos.imagemId, dados: schema.imagens.dados })
+    .from(schema.produtos)
+    .leftJoin(schema.imagens, eq(schema.imagens.id, schema.produtos.imagemId));
+  const gravadas = new Map<string, number>();
+  let n = 0;
+  for (const p of produtos) {
+    const arquivo = fotoDoProduto(p.nome);
+    const caminho = arquivo && join(pasta, `${arquivo}.jpg`);
+    if (!arquivo || !caminho || !existsSync(caminho)) continue;
+    const antiga = p.dados && FOTOS_ANTIGAS.has(createHash("sha256").update(Buffer.from(p.dados, "base64")).digest("hex"));
+    if (p.imagemId && !antiga) continue;
+    if (!gravadas.has(arquivo)) {
+      const [img] = await db.insert(schema.imagens).values({ tipo: "image/jpeg", dados: readFileSync(caminho).toString("base64") }).returning({ id: schema.imagens.id });
+      gravadas.set(arquivo, img.id);
+    }
+    await db.update(schema.produtos).set({ imagemId: gravadas.get(arquivo)! }).where(eq(schema.produtos.id, p.id));
+    n++;
+  }
+  await db.insert(A).values({ acao: "fotos_cartazes_v1", entidade: "produto", dados: { produtos: n } });
+  console.log(`Fotos dos cartazes em ${n} produtos.`);
+}
 
 /**
  * Uma vez só: a logo oficial da AD Olinda (marca/ad-olinda-selo.png: símbolo num círculo branco)
@@ -160,6 +209,7 @@ export async function cargaInicial(db: DB) {
   await fotosIniciais(db);
   await separarPamonhas(db);
   await logoOficial(db);
+  await fotosDosCartazes(db);
 
   const [{ u }] = await db.select({ u: count() }).from(schema.usuarios);
   if (u === 0 && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
