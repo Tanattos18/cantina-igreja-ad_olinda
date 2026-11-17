@@ -15,6 +15,22 @@ const FOTOS: [RegExp, string][] = [
   [/^bolinho/i, "bolinho"],
 ];
 
+/**
+ * Uma vez só: a logo oficial da AD Olinda (marca/ad-olinda-selo.png: símbolo num círculo branco)
+ * no lugar da logo tirada do Instagram. Depois, quem manda é o painel (Configurações).
+ */
+async function logoOficial(db: DB) {
+  const A = schema.auditoria;
+  const [feito] = await db.select({ id: A.id }).from(A).where(eq(A.acao, "logo_oficial_v1")).limit(1);
+  if (feito) return;
+  const arquivo = join(process.cwd(), "marca", "ad-olinda-selo.png");
+  if (!existsSync(arquivo)) return;
+  const [img] = await db.insert(schema.imagens).values({ tipo: "image/png", dados: readFileSync(arquivo).toString("base64") }).returning({ id: schema.imagens.id });
+  await db.update(schema.configuracao).set({ logoId: img.id }).where(eq(schema.configuracao.id, 1));
+  await db.insert(A).values({ acao: "logo_oficial_v1", entidade: "configuracao" });
+  console.log("Logo oficial da AD Olinda aplicada.");
+}
+
 const SABORES_PAMONHA = [
   { nome: "Pamonha doce", descricao: "Pamonha doce" },
   { nome: "Pamonha à moda", descricao: "Pamonha à moda" },
@@ -143,6 +159,7 @@ export async function cargaInicial(db: DB) {
 
   await fotosIniciais(db);
   await separarPamonhas(db);
+  await logoOficial(db);
 
   const [{ u }] = await db.select({ u: count() }).from(schema.usuarios);
   if (u === 0 && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
