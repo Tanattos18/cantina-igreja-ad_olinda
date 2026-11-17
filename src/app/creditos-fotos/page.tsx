@@ -18,8 +18,7 @@ export default function CreditosFotos() {
     <main className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="font-titulos text-3xl font-bold text-marinho">Créditos das fotos</h1>
       <p className="mt-2 text-sm text-stone-600">
-        As imagens dos produtos vêm dos cartazes da própria cantina (@ad.olinda.oficial) e são ilustrativas.
-        A foto da latinha usada nos combos vem do Wikimedia Commons, com licença livre:
+        As fotos ilustrativas do cardápio vêm do Wikimedia Commons, com licença livre. Foram recortadas e reduzidas para o site.
       </p>
       <ul className="mt-6 space-y-3">
         {Object.entries(creditos).map(([chave, c]) => (

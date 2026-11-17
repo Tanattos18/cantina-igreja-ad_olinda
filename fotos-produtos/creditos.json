@@ -1,4 +1,39 @@
 {
+  "pamonha": {
+    "arquivo": "Pamonhas.jpg",
+    "autor": "Isalinky",
+    "licenca": "CC BY-SA 3.0",
+    "licencaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Pamonhas.jpg"
+  },
+  "esfirra": {
+    "arquivo": "Brazilian sfiha.jpg",
+    "autor": "Mauro Cateb",
+    "licenca": "CC BY-SA 3.0",
+    "licencaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Brazilian_sfiha.jpg"
+  },
+  "empada": {
+    "arquivo": "Empadas de frango Vila Isabel Rio de Janeiro Brasil.jpg",
+    "autor": "Eduardo P",
+    "licenca": "CC BY-SA 3.0",
+    "licencaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Empadas_de_frango_Vila_Isabel_Rio_de_Janeiro_Brasil.jpg"
+  },
+  "disco": {
+    "arquivo": "2020-03-02 21 15 39 A breaded white meat chicken breast patty with rib meat and home-style gravy included as part of a Hungry-Man Country Fried Chicken TV dinner in the Dulles section of Sterling, Loudoun County, Virginia.jpg",
+    "autor": "Famartin",
+    "licenca": "CC BY-SA 4.0",
+    "licencaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:2020-03-02_21_15_39_A_breaded_white_meat_chicken_breast_patty_with_rib_meat_and_home-style_gravy_included_as_part_of_a_Hungry-Man_Country_Fried_Chicken_TV_dinner_in_the_Dulles_section_of_Sterling,_Loudoun_County,_Virginia.jpg"
+  },
+  "bolinho": {
+    "arquivo": "Pelas Jagung in Bojonegoro.jpg",
+    "autor": "M.akbar.raf",
+    "licenca": "CC BY-SA 4.0",
+    "licencaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Pelas_Jagung_in_Bojonegoro.jpg"
+  },
   "lata": {
     "arquivo": "HK 堅尼地城 Kennedy Town Coca Cola red can body October 2019 SS2 01.jpg",
     "autor": "Gdragoo Joehp fcore",
